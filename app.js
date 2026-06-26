@@ -1,14 +1,43 @@
 const button = document.querySelector("button");
 const resultado = document.getElementById("resultado");
 
-button.addEventListener("mousedown", () => {
-  resultado.textContent = "🎧 Escuchando tarareo...";
+let mediaRecorder;
+let audioChunks = [];
+
+button.addEventListener("mousedown", async () => {
+  resultado.textContent = "🎤 Pidiendo acceso al micrófono...";
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    resultado.textContent = "🎧 Grabando tarareo...";
+
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunks.push(event.data);
+    };
+
+  } catch (err) {
+    resultado.textContent = "❌ No se pudo acceder al micrófono";
+  }
 });
 
 button.addEventListener("mouseup", () => {
-  resultado.textContent = "🔍 Buscando canción...";
+  if (mediaRecorder && mediaRecorder.state !== "inactive") {
+    mediaRecorder.stop();
 
-  setTimeout(() => {
-    resultado.textContent = "🎵 Ejemplo: Shape of You - Ed Sheeran";
-  }, 2000);
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+
+      resultado.textContent = "🔍 Analizando tarareo...";
+
+      setTimeout(() => {
+        resultado.textContent = "🎵 Tarareo recibido (IA aún no conectada)";
+      }, 2000);
+    };
+  }
 });
